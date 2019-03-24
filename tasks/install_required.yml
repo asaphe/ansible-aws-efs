@@ -1,0 +1,12 @@
+---
+  - name: Install required APT packages
+    apt:
+      name: "{{ packages }}"
+      update_cache: yes
+      state: present
+      autoclean: yes
+      autoremove: yes
+    vars:
+      packages:
+        - make
+        - binutils

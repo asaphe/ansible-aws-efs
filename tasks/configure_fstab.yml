@@ -1,0 +1,50 @@
+---
+  - block:
+    - name: "Create EFS mount directory {{ efs_variables.mnt_path }}"
+      file:
+        state: directory
+        path: "{{ efs_variables.mnt_path }}"
+        owner: "{{ ansible_user }}"
+
+    - name: Get current availability-zone
+      uri:
+        url: 'http://169.254.169.254/latest/meta-data/placement/availability-zone'
+        return_content: yes
+      run_once: true
+      become: false
+      register: aws_current_az
+
+    - name: EFS Facts
+      efs_facts:
+        profile: "{{ efs_variables.profile }}"
+        region: "{{ efs_variable.region }}"
+        tags: "{{ efs_variable.tags | default(omit) }}"
+      register: efs_volume
+      delegate_to: localhost
+      run_once: true
+      become: false
+      when: discover_efs | default(false)
+
+    - name: Mount EFS Volume (discovered)
+      mount:
+        name: "{{ efs_variables.mnt_path }}"
+        src: "{{ aws_current_az.content }}{{ efs.mount_point }}"
+        fstype: nfs4
+        opts: nfsvers=4.1
+        state: mounted
+      with_items: "{{ efs_volume.ansible_facts.efs }}"
+      loop_control:
+        loop_var: efs
+      when: efs_volume and efs.name in efs_variables['name']
+      # Need to verify this when since efs_volume can be 'skipped'
+
+    - name: Mount EFS Volume (manual)
+      mount:
+        name: "{{ efs_variables.mnt_path }}"
+        src: "{{ aws_current_az.content }}.{{ efs_variables.file_system_id }}.efs_variables.{{ efs_variables.region }}.amazonaws.com:/"
+        fstype: nfs4
+        opts: nfsvers=4.1
+        state: mounted
+      when: not discover_efs | default(false)
+
+    become: true

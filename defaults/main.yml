@@ -1,0 +1,8 @@
+---
+efs_variables:
+  profile: "{{ aws_profile }}"
+  region: "{{ aws_region }}"
+  name: "{{ volume_name }}"
+  mnt_path: "{{ mount_path }}"
+  file_system_id: "{{ fs_id }}"
+  tags: "{{ tags_list }}"

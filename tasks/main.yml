@@ -1,0 +1,11 @@
+---
+  - block:
+      - import_tasks: install_required.yml
+        tags: [aws.efs.required]
+
+      - import_tasks: clone_build_helper.yml
+        tags: [aws.efs.clone_build]
+
+      - import_tasks: configure_fstab.yml
+        when: not skip_fstab|default(false)
+        tags: [aws.efs.configure]
